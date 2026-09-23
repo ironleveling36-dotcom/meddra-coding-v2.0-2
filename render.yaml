@@ -1,0 +1,62 @@
+# render.yaml - Render Web Service Configuration
+# Deploy to: https://render.com
+
+services:
+  - type: web
+    name: meddra-coding
+    env: python
+    
+    # Build configuration
+    buildCommand: |
+      pip install -r requirements.txt
+      python scripts/build_index.py
+    
+    startCommand: |
+      gunicorn -w 4 -b 0.0.0.0:$PORT app.main:app
+    
+    # Environment variables
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 8000
+      - key: AI_ENABLED
+        value: "true"
+      - key: AI_API_BASE_URL
+        value: "https://api.hcnsec.cn/v1"
+      - key: AI_MODEL
+        value: "sensenova-6.8-flash-lite"
+      - key: ENABLE_SEMANTIC
+        value: "true"
+      - key: RESPONSE_CACHE_TTL
+        value: "300"
+      - key: QUERY_CACHE_SIZE
+        value: "1024"
+    
+    # Secrets (set in Render dashboard)
+    secretFiles:
+      - name: AI_API_KEY
+        description: "SenseNova API Key"
+    
+    # Health check
+    healthCheckPath: /health
+    healthCheckInterval: 30
+    
+    # Scaling
+    plan: standard
+    numInstances: 1
+    
+    # Disk and memory
+    disk:
+      name: meddra-data
+      mountPath: /data
+      sizeGB: 5
+    
+    # Timeout
+    maxDuration: 600
+    
+    # Deployment
+    autoDeploy: true  # Deploy on git push to main
+    branch: main

@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MedDRA Coding Assistant — Enhanced with AI Insights</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --bg-secondary: #161b22;
+      --bg-tertiary: #1c2230;
+      --border: #30363d;
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --accent-primary: #3b82f6;
+      --accent-success: #22c55e;
+      --accent-warning: #f59e0b;
+      --accent-danger: #ef4444;
+      --accent-purple: #a855f7;
+      --accent-cyan: #06b6d4;
+      
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.5);
+    }
+    
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #fafbfc;
+        --bg-secondary: #ffffff;
+        --bg-tertiary: #f0f3f7;
+        --border: #d0d7de;
+        --text-primary: #1f2328;
+        --text-secondary: #656d76;
+        --accent-primary: #2563eb;
+        --accent-success: #16a34a;
+        --accent-warning: #d97706;
+        --accent-danger: #dc2626;
+        --accent-purple: #9333ea;
+        --accent-cyan: #0891b2;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 16px 80px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header h1 {
+      margin: 0 0 8px;
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-purple));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header p {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    .header .badge {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 10px;
+      background: rgba(6, 182, 212, 0.15);
+      border: 1px solid var(--accent-cyan);
+      border-radius: 20px;
+      color: var(--accent-cyan);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    /* Search bar */
+    .search-section {
+      margin: 32px 0;
+    }
+
+    .search-input-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .search-input-group input {
+      flex: 1;
+      padding: 12px 16px;
+      font-size: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .search-input-group input:focus {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .search-input-group button {
+      padding: 0 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent-primary);
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .search-input-group button:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-purple));
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .search-input-group button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Quick chips */
+    .quick-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .chip {
+      padding: 6px 12px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .chip:hover {
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+      background: var(--bg-secondary);
+    }
+
+    /* AI Panel - Enhanced */
+    .ai-panel {
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.05), rgba(168, 85, 247, 0.05));
+      border: 2px solid var(--accent-cyan);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+      display: none;
+    }
+
+    .ai-panel.active {
+      display: block;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .ai-panel-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--accent-cyan);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .ai-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 8px var(--accent-cyan);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* AI Interpretation - UPPERCASE AND PROMINENT */
+    .ai-interpretation {
+      background: var(--bg-secondary);
+      border-left: 4px solid var(--accent-cyan);
+      border-radius: 6px;
+      padding: 14px;
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .ai-interpretation-label {
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      font-weight: 600;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .ai-interpretation-text {
+      font-size: 1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--accent-cyan);
+      letter-spacing: 0.5px;
+      line-height: 1.6;
+    }
+
+    /* AI Analysis Details - AFTER interpretation */
+    .ai-analysis-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .ai-detail-box {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px;
+    }
+
+    .ai-detail-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .ai-detail-value {
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      font-style: italic;
+    }
+
+    .ai-expanded-terms {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .ai-expanded-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .ai-term-chip {
+      display: inline-block;
+      padding: 5px 10px;
+      background: var(--accent-cyan);
+      color: white;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      margin-right: 6px;
+      margin-bottom: 6px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    /* Results section */
+    .results-section {
+      margin-top: 24px;
+    }
+
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .results-header h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: var(--text-primary);
+    }
+
+    .result-stats {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      display: flex;
+      gap: 12px;
+    }
+
+    /* Result cards */
+    .result-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 10px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 14px;
+      align-items: start;
+      transition: all 0.2s ease;
+    }
+
+    .result-card:hover {
+      border-color: var(--accent-primary);
+      background: var(--bg-tertiary);
+      box-shadow: var(--shadow-md);
+    }
+
+    .result-rank {
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      font-weight: 700;
+      min-width: 28px;
+      text-align: center;
+      padding-top: 2px;
+    }
+
+    .result-content {
+      min-width: 0;
+    }
+
+    .result-term {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--accent-primary);
+      margin-bottom: 4px;
+      word-break: break-word;
+    }
+
+    .result-term .badge {
+      display: inline-block;
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: white;
+      background: var(--accent-primary);
+      padding: 1px 4px;
+      border-radius: 3px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    .result-pt {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: 3px;
+    }
+
+    .result-pt strong {
+      color: var(--text-primary);
+    }
+
+    .result-soc {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .result-soc strong {
+      color: var(--text-primary);
+    }
+
+    .result-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 6px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    .tag.lexical {
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--accent-primary);
+      border-color: var(--accent-primary);
+    }
+
+    .tag.semantic {
+      background: rgba(168, 85, 247, 0.1);
+      color: var(--accent-purple);
+      border-color: var(--accent-purple);
+    }
+
+    .tag.hybrid {
+      background: rgba(34, 197, 94, 0.1);
+      color: var(--accent-success);
+      border-color: var(--accent-success);
+    }
+
+    /* NEW: AI Suggestion Tag */
+    .tag.ai-suggestion {
+      background: rgba(6, 182, 212, 0.15);
+      color: var(--accent-cyan);
+      border-color: var(--accent-cyan);
+      font-weight: 600;
+      animation: glow 2s ease-in-out infinite;
+    }
+
+    @keyframes glow {
+      0%, 100% { text-shadow: 0 0 6px rgba(6, 182, 212, 0.5); }
+      50% { text-shadow: 0 0 10px rgba(6, 182, 212, 0.8); }
+    }
+
+    .tag.ai-pick {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--accent-warning);
+      border-color: var(--accent-warning);
+      font-weight: 600;
+    }
+
+    .tag.ime {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--accent-danger);
+      border-color: var(--accent-danger);
+      font-weight: 600;
+    }
+
+    .result-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .copy-btn {
+      padding: 3px 8px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text-secondary);
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 500;
+    }
+
+    .copy-btn:hover {
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+    }
+
+    .copy-btn.copied {
+      border-color: var(--accent-success);
+      color: var(--accent-success);
+    }
+
+    .result-confidence {
+      text-align: right;
+      min-width: 60px;
+    }
+
+    .confidence-score {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--accent-success);
+    }
+
+    .confidence-label {
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .score-breakdown {
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    .score-breakdown div {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    /* Status messages */
+    .status-message {
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .status-message.active {
+      display: block;
+    }
+
+    .status-message.info {
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--accent-primary);
+      border: 1px solid var(--accent-primary);
+    }
+
+    .status-message.error {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--accent-danger);
+      border: 1px solid var(--accent-danger);
+    }
+
+    /* Loading animation */
+    .loading-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--accent-cyan);
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 12px;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    footer a {
+      color: var(--accent-primary);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .container {
+        padding: 16px 12px 60px;
+      }
+
+      .header h1 {
+        font-size: 1.6rem;
+      }
+
+      .result-card {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .result-confidence {
+        text-align: left;
+        min-width: auto;
+      }
+
+      .ai-analysis-details {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>🩺 MedDRA Coding</h1>
+      <p>AI-Powered Hybrid Search with SenseNova Integration</p>
+      <div class="badge">✨ Powered by SenseNova Flash</div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="search-section">
+      <div class="search-input-group">
+        <input 
+          id="searchInput" 
+          type="text" 
+          placeholder="Type symptom, complaint, abbreviation… (e.g., bleeding, SOB, drug not working)" 
+          autocomplete="off" 
+          autofocus 
+        />
+        <button id="searchBtn">Search</button>
+      </div>
+      <div class="quick-chips">
+        <span class="chip" data-search="bleeding">bleeding</span>
+        <span class="chip" data-search="SOB">SOB</span>
+        <span class="chip" data-search="tablet is hard">tablet hard</span>
+        <span class="chip" data-search="headache">headache</span>
+        <span class="chip" data-search="drug not working">drug ineffective</span>
+      </div>
+    </div>
+
+    <!-- Status Messages -->
+    <div id="statusMessage" class="status-message"></div>
+
+    <!-- AI Analysis Panel - Enhanced with uppercase interpretation -->
+    <div id="aiPanel" class="ai-panel">
+      <div class="ai-panel-header">
+        <span class="ai-indicator"></span>
+        <span>🤖 AI Analysis</span>
+      </div>
+      <div id="aiContent"></div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="results-section">
+      <div class="results-header" style="display: none;" id="resultsHeader">
+        <div>
+          <h2 id="resultsTitle">Results</h2>
+        </div>
+        <div class="result-stats">
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <span id="resultCount">0</span>
+            <span>matches</span>
+          </div>
+        </div>
+      </div>
+      <div id="resultsList"></div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <a href="/credits">Credits</a> · <a href="/docs">API Docs</a> · Built with ⚡ SenseNova for fast, accurate MedDRA coding
+    </footer>
+  </div>
+
+  <script>
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const statusMessage = document.getElementById('statusMessage');
+    const aiPanel = document.getElementById('aiPanel');
+    const resultsList = document.getElementById('resultsList');
+    const resultsHeader = document.getElementById('resultsHeader');
+    const resultsTitle = document.getElementById('resultsTitle');
+    const resultCount = document.getElementById('resultCount');
+
+    // Quick chip search
+    document.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        searchInput.value = chip.dataset.search;
+        performSearch();
+      });
+    });
+
+    // Search button and Enter key
+    searchBtn.addEventListener('click', performSearch);
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') performSearch();
+    });
+
+    async function performSearch() {
+      const query = (searchInput.value || '').trim();
+      if (!query) return;
+
+      searchBtn.disabled = true;
+      showStatus('Searching with SenseNova AI...', 'info');
+      aiPanel.classList.remove('active');
+      resultsList.innerHTML = '';
+      resultsHeader.style.display = 'none';
+
+      try {
+        // Perform hybrid search with AI
+        const response = await fetch(`/api/code?q=${encodeURIComponent(query)}&top_k=20&ai=true`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const data = await response.json();
+        if (!data.results || data.results.length === 0) {
+          showStatus(`No matches for "${escapeHtml(query)}". Try rephrasing or searching for related clinical terms.`, 'error');
+          searchBtn.disabled = false;
+          return;
+        }
+
+        // Show AI analysis if available
+        if (data.ai && data.ai.used) {
+          renderAIPanel(data.ai);
+        }
+
+        // Render results with AI suggestion tags
+        renderResults(data.results, query, data.ai);
+        showStatus(`${data.count} matches for "${escapeHtml(query)}" (${data.processing_time_ms}ms)`, 'info');
+        resultsHeader.style.display = 'flex';
+        resultCount.textContent = data.count;
+      } catch (error) {
+        showStatus(`Error: ${error.message}`, 'error');
+      } finally {
+        searchBtn.disabled = false;
+      }
+    }
+
+    function renderAIPanel(aiData) {
+      if (!aiData.interpretation && !aiData.reason) return;
+
+      let html = '';
+      
+      // Main interpretation in UPPERCASE
+      if (aiData.interpretation) {
+        html += `<div class="ai-interpretation">
+          <span class="ai-interpretation-label">Clinical Interpretation:</span>
+          <div class="ai-interpretation-text">${escapeHtml(aiData.interpretation)}</div>
+        </div>`;
+      }
+
+      // AI Analysis Details - AFTER interpretation
+      if (aiData.reason || aiData.expanded_terms) {
+        html += `<div class="ai-analysis-details">`;
+        
+        if (aiData.reason) {
+          html += `<div class="ai-detail-box">
+            <span class="ai-detail-label">Reasoning:</span>
+            <div class="ai-detail-value">${escapeHtml(aiData.reason)}</div>
+          </div>`;
+        }
+        
+        if (aiData.expanded_terms && aiData.expanded_terms.length > 0) {
+          html += `<div class="ai-detail-box">
+            <span class="ai-detail-label">Suggested Terms (${aiData.expanded_terms.length}):</span>
+            <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+              ${aiData.expanded_terms.map(t => `<span class="ai-term-chip">${escapeHtml(t)}</span>`).join('')}
+            </div>
+          </div>`;
+        }
+        
+        html += `</div>`;
+      }
+
+      document.getElementById('aiContent').innerHTML = html;
+      aiPanel.classList.add('active');
+    }
+
+    function renderResults(results, query, aiData) {
+      resultsTitle.textContent = `Results for "${escapeHtml(query)}"`;
+      
+      // Get AI suggested term IDs for tagging
+      const aiSuggestedIds = new Set();
+      if (aiData && aiData.expanded_terms) {
+        results.forEach(r => {
+          // Tag results that match expanded terms
+          if (aiData.expanded_terms.some(term => 
+            r.term.toLowerCase().includes(term.toLowerCase()) || 
+            r.pt.toLowerCase().includes(term.toLowerCase())
+          )) {
+            aiSuggestedIds.add(r.term_id);
+          }
+        });
+      }
+
+      resultsList.innerHTML = results.map((r, i) => `
+        <div class="result-card">
+          <div class="result-rank">#${i + 1}</div>
+          <div class="result-content">
+            <div class="result-term">
+              <span class="badge">${escapeHtml(r.level)}</span>
+              ${escapeHtml(r.term)}
+            </div>
+            ${r.pt && r.pt.toLowerCase() !== r.term.toLowerCase() ? 
+              `<div class="result-pt">↳ PT: <strong>${escapeHtml(r.pt)}</strong></div>` : ''}
+            ${r.soc ? `<div class="result-soc">SOC: <strong>${escapeHtml(r.soc)}</strong></div>` : ''}
+            <div class="result-tags">
+              ${getMatchTypeTag(r.match_type)}
+              ${aiSuggestedIds.has(r.term_id) ? '<span class="tag ai-suggestion">💡 AI Suggested</span>' : ''}
+              ${r.ai_pick ? '<span class="tag ai-pick">⭐ AI Pick</span>' : ''}
+              ${r.is_ime ? '<span class="tag ime">⚠️ IME</span>' : ''}
+            </div>
+            <div class="result-actions">
+              <button class="copy-btn" data-copy="${escapeHtml(r.term)}">📋 LLT</button>
+              ${r.pt && r.pt !== r.term ? 
+                `<button class="copy-btn" data-copy="${escapeHtml(r.pt)}">📋 PT</button>` : ''}
+            </div>
+          </div>
+          <div class="result-confidence">
+            <div class="confidence-score">${r.confidence}%</div>
+            <div class="confidence-label">Confidence</div>
+            <div class="score-breakdown">
+              <div><span>Semantic:</span> <span>${r.semantic_score}%</span></div>
+              <div><span>Lexical:</span> <span>${r.lexical_score}%</span></div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      // Attach copy listeners
+      resultsList.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(btn.dataset.copy);
+            const original = btn.textContent;
+            btn.textContent = '✅ Copied';
+            btn.classList.add('copied');
+            setTimeout(() => {
+              btn.textContent = original;
+              btn.classList.remove('copied');
+            }, 1500);
+          } catch (e) {
+            console.error('Copy failed:', e);
+          }
+        });
+      });
+    }
+
+    function getMatchTypeTag(matchType) {
+      const tags = {
+        'semantic+lexical': '<span class="tag hybrid">🎯 Hybrid</span>',
+        'lexical': '<span class="tag lexical">🔤 Lexical</span>',
+        'semantic': '<span class="tag semantic">🧠 Semantic</span>',
+        'ai': '<span class="tag ai-pick">🤖 AI</span>',
+      };
+      return tags[matchType] || '';
+    }
+
+    function showStatus(message, type) {
+      statusMessage.textContent = message;
+      statusMessage.className = `status-message active ${type}`;
+    }
+
+    function escapeHtml(text) {
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      };
+      return String(text || '').replace(/[&<>"']/g, c => map[c]);
+    }
+
+    // Focus search input on load
+    searchInput.focus();
+  </script>
+</body>
+</html>

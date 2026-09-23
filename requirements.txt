@@ -1,0 +1,31 @@
+# FastAPI & Web
+fastapi==0.104.1
+uvicorn==0.24.0
+httpx==0.25.0
+pydantic==2.5.0
+python-multipart==0.0.6
+
+# Data & ML
+numpy==1.24.3
+pandas==2.1.1
+rapidfuzz==3.5.2
+openpyxl==3.1.2
+
+# Embeddings & NLP
+fastembed==0.2.8
+onnx==1.15.0
+onnxruntime==1.17.0
+
+# Production
+gunicorn==21.2.0
+python-dotenv==1.0.0
+
+# Optional: Telegram bot
+python-telegram-bot==20.3
+aiohttp==3.9.0
+
+# Development
+pytest==7.4.3
+pytest-asyncio==0.21.1
+black==23.11.0
+flake8==6.1.0

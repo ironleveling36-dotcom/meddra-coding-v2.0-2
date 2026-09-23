@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  meddra:
+    build: .
+    container_name: meddra-coding
+    ports:
+      - "8000:8000"
+    environment:
+      AI_ENABLED: "true"
+      AI_API_BASE_URL: "https://api.hcnsec.cn/v1"
+      AI_MODEL: "sensenova-6.8-flash-lite"
+      ENABLE_SEMANTIC: "true"
+      RESPONSE_CACHE_TTL: "300"
+      QUERY_CACHE_SIZE: "1024"
+      LOG_LEVEL: "INFO"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/data:ro
+      - ./static:/app/static:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Watchtower for auto-updates
+  watchtower:
+    image: containrrr/watchtower:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 300 meddra-coding
+    restart: unless-stopped
+    condition: service_healthy
+
+volumes:
+  data:

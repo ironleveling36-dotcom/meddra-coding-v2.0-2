@@ -1,0 +1,206 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# Testing
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+htmlcov/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Backup files
+*.bak
+*.backup
+*~
+.~*
+*.orig
+
+# Secrets and credentials
+.env
+.env.local
+.env.*.local
+secrets/
+*.key
+*.pem
+*.p12
+api_keys.txt
+credentials.json
+config/secrets.yaml
+
+# Large files
+*.zip
+*.tar.gz
+*.rar
+*.iso
+*.img
+data/*.npz
+data/*.bin
+data/*.pt
+data/*.pth
+
+# Build outputs
+/build
+/dist
+*.egg-info
+
+# Documentation
+site/
+docs/_build/
+
+# OS specific
+.DS_Store
+.DS_Store?
+._*
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Render.com
+.render/
+
+# Node modules (if using any frontend build tools)
+node_modules/
+package-lock.json
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Misc
+.vscode/settings.json
+.idea/workspace.xml
+.idea/tasks.xml
+*.iml
+local.properties
+gradlew.bat
+gradlew
+
+# Dependencies installed locally
+/venv
+/.venv
+/env
+/.env
+/dist
+/build
+
+# Cache directories
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Runtime files
+*.pid
+*.sock
+tmp/
+temp/
+
+# IDE specific files
+.editorconfig
+*.sublime-settings
+
+# Test coverage
+coverage.xml
+.coverage.*
+
+# Performance/profiling
+prof/
+*.prof
+callgrind.out.*
+
+# UNIXFiles
+*.o
+*.a
+*.so
+
+# Compiled Python files
+*.pyc
+*.pyo
+__pycache__
+
+# virtualenv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Mac OS X
+.AppleDouble
+.LSOverride
+
+# Temporary files
+*.tmp
+*.temp
+
+# Local development
+local_*.py
+dev_*.py
+test_local_*.py
