@@ -289,3 +289,29 @@ class OptimizedMeddraEngine:
             scored.append((rank_score, sem01, lex_conf, i, match_type))
         
         return scored
+
+
+# Global engine instance
+_engine = None
+_engine_lock = threading.Lock()
+
+
+def get_engine():
+    """Return a thread-safe singleton MedDRA engine."""
+    global _engine
+
+    if _engine is None:
+        with _engine_lock:
+            if _engine is None:
+                semantic_enabled = (
+                    os.getenv("MEDDRA_SEMANTIC_ENABLED", "true").lower()
+                    in ("1", "true", "yes")
+                )
+
+                _engine = OptimizedMeddraEngine(
+                    data_dir=DATA_DIR,
+                    enable_semantic=semantic_enabled,
+                )
+
+    return _engine
+
