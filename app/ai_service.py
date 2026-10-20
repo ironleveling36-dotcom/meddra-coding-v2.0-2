@@ -191,8 +191,8 @@ class SenseNovaAIService:
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": prompt},
             ],
-            "temperature": 0.7,
-            "max_tokens": 256,
+            "temperature": 0.0,
+            "max_tokens": 512,
         }
 
         # Generous timeouts for SenseNova (can be slower than simple APIs)
@@ -214,6 +214,27 @@ class SenseNovaAIService:
                 _refine_cache[cache_key] = None
                 return None
 
+            # Log response metadata without exposing prompts, API keys, or full content.
+            choices = data.get("choices") or []
+            if choices:
+                choice = choices[0] or {}
+                message = choice.get("message") or {}
+                content = message.get("content")
+                logger.info(
+                    "SenseNova response diagnostics: model=%s, finish_reason=%s, "
+                    "message_keys=%s, content_type=%s, content_length=%s",
+                    data.get("model"),
+                    choice.get("finish_reason"),
+                    list(message.keys()),
+                    type(content).__name__,
+                    len(content) if isinstance(content, str) else None,
+                )
+            else:
+                logger.warning(
+                    "SenseNova response has no choices; response_keys=%s",
+                    list(data.keys()),
+                )
+
             text = _extract_text(data).strip()
             
             # Strip markdown fences if present
@@ -223,7 +244,12 @@ class SenseNovaAIService:
                     text = text[4:].strip()
 
             if not text:
-                logger.warning(f"SenseNova returned empty content")
+                logger.warning(
+                    "SenseNova returned empty content; model=%s, choices_count=%s, usage_present=%s",
+                    data.get("model"),
+                    len(data.get("choices") or []),
+                    bool(data.get("usage")),
+                )
                 _refine_cache[cache_key] = None
                 return None
 
