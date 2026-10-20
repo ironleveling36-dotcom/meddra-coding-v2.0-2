@@ -38,7 +38,6 @@ COPY scripts/ /app/scripts/
 # Create data volume mount point
 RUN mkdir -p /data
 COPY data/meddra_terms.jsonl.gz /data/meddra_terms.jsonl.gz
-COPY data/meddra_vectors.npz /data/meddra_vectors.npz
 COPY data/29-0_ime_list-en.xlsx /data/29-0_ime_list-en.xlsx
 
 # Expose port
