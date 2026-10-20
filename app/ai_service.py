@@ -31,19 +31,10 @@ HEALTH_CACHE_TTL = 15  # seconds
 _refine_cache: dict[str, dict | None] = {}
 _refine_cache_max_size = 256
 
-SYSTEM_PROMPT = """You are a MedDRA coding expert. Your task is to:
-1. Interpret the user's free-text symptom/complaint into clinical meaning
-2. Select the best MedDRA codes from the provided candidates
-3. Suggest additional clinical search terms if needed
-
-Respond ONLY with JSON:
-{
-  "interpretation": "clinical interpretation of user's phrase",
-  "ranked_term_ids": [id1, id2, id3],
-  "need_more": false,
-  "suggested_terms": [],
-  "reason": "why you selected these terms"
-}"""
+SYSTEM_PROMPT = """You select the best MedDRA terms from the supplied candidates for the user's clinical phrase.
+Use only supplied candidate term IDs. Never invent IDs. Return one compact valid JSON object only:
+{"interpretation":"short clinical meaning","ranked_term_ids":[123],"need_more":false,"suggested_terms":[],"reason":"brief reason"}
+Keep interpretation and reason short. Rank clinically relevant candidates first. If uncertain, return an empty ranked_term_ids list."""
 
 
 def _headers() -> dict:
@@ -179,10 +170,13 @@ class SenseNovaAIService:
         if cache_key in _refine_cache:
             return _refine_cache[cache_key]
 
+        # Keep the prompt compact; long candidate lists can exhaust the output budget.
+        candidate_subset = candidates[:8]
         prompt = (
-            f"USER QUERY: {query!r}\n\n"
-            f"CANDIDATES:\n{cls._candidate_block(candidates)}\n\n"
-            "Respond with JSON only."
+            f"QUERY: {query!r}\\n"
+            f"CANDIDATES (choose IDs only from this list):\\n"
+            f"{cls._candidate_block(candidate_subset)}\\n"
+            "Return compact JSON only. No markdown."
         )
 
         body = {
@@ -192,7 +186,7 @@ class SenseNovaAIService:
                 {"role": "user", "content": prompt},
             ],
             "temperature": 0.0,
-            "max_tokens": 512,
+            "max_tokens": 2048,
         }
 
         # Generous timeouts for SenseNova (can be slower than simple APIs)
@@ -216,15 +210,17 @@ class SenseNovaAIService:
 
             # Log response metadata without exposing prompts, API keys, or full content.
             choices = data.get("choices") or []
+            finish_reason = None
             if choices:
                 choice = choices[0] or {}
+                finish_reason = choice.get("finish_reason")
                 message = choice.get("message") or {}
                 content = message.get("content")
                 logger.info(
                     "SenseNova response diagnostics: model=%s, finish_reason=%s, "
                     "message_keys=%s, content_type=%s, content_length=%s",
                     data.get("model"),
-                    choice.get("finish_reason"),
+                    finish_reason,
                     list(message.keys()),
                     type(content).__name__,
                     len(content) if isinstance(content, str) else None,
@@ -235,8 +231,18 @@ class SenseNovaAIService:
                     list(data.keys()),
                 )
 
+            # If provider reports token-limit truncation, never parse partial JSON.
+            if finish_reason == "length":
+                logger.warning(
+                    "SenseNova output truncated (finish_reason=length); "
+                    "max_tokens=%s. Falling back to local search.",
+                    body["max_tokens"],
+                )
+                _refine_cache[cache_key] = None
+                return None
+
             text = _extract_text(data).strip()
-            
+
             # Strip markdown fences if present
             if text.startswith("```"):
                 text = text.strip("`")
